@@ -12,11 +12,15 @@ from . forms import RegisterForm
 
 def register(request):
     if request.method == 'POST':
+        print("\n\npost data:\n" + str(request.POST), end="\n\n")
         form = RegisterForm(request.POST)
+
         if form.is_valid():
             user = form.save()
             login(request, user)   # Login the user after registration
             return redirect('home')  # Redirect to homepage after login
+
+
     else:
         form = RegisterForm()
     

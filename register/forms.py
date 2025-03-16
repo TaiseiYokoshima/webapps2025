@@ -14,5 +14,13 @@ class RegisterForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['currency'].initial = "GBP"
+        
+
+        if not self.data.get('currency'):
+            # sets the default 
+            self.fields['currency'].initial = "GBP"
+
         self.fields['currency'].widget = forms.Select(choices=Account.CURRENCIES, attrs={'class':'currency-dropdown'})
+
+
+
