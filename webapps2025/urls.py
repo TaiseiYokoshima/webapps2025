@@ -25,8 +25,12 @@ def home(request):
 
 urlpatterns = [
     path("", home, name="home"),
+    path("admin/", admin.site.urls),
 
     path("register/", include("register.urls")),
-    path("admin/", admin.site.urls),
+    path('conversion/', include('conversion.urls')),
+
+
+
     path('accounts/', include('django.contrib.auth.urls')),
 ]
