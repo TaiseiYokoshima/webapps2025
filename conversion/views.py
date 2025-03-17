@@ -5,6 +5,9 @@ from django.views.decorators.http import require_GET
 
 
 
+
+from utils.currency import invalid_amount_string, calculate_conversion_from_string
+
 import math
 
 # Create your views here.
@@ -23,13 +26,10 @@ rates = {
         }
 
 
-def calculate_conversion(amount, rate):
-    result = math.floor(amount * rate * 100) / 100
-    return float(result)
-
-
 @require_GET
 def convert(request, source, target, amount):
+
+
     source = source.upper()
     target = target.upper()
 
@@ -39,27 +39,14 @@ def convert(request, source, target, amount):
     if source == target:
         return HttpResponseBadRequest("Cannot convert to the same currency")
 
-
-    for char in amount:
-        if not char.isdigit() and char != ".":
-            return HttpResponseBadRequest("Invalid value for amount")
-
-
-    # print("\n\ngot: ", amount, end="\n\n")
-
-    try:
-        amount = float(int(float(amount) * 100) / 100)
-    except ValueError:
+    if (invalid_amount_string(amount)):
         return HttpResponseBadRequest("Invalid value for amount")
 
+    if (float(amount) == 0):
+        return HttpResponseBadRequest("Invalid value for amount")
 
     rate = rates[source][target]
-
-    result = calculate_conversion(amount, rate)
-
-
-    if result == 0:
-        return HttpResponseBadRequest("Invalid value for amount")
+    result = calculate_conversion_from_string(amount, rate)
 
 
     return JsonResponse({'result': result})
