@@ -5,8 +5,6 @@ from accounts.models import Account
 from utils.currency import invalid_amount_string
 
 
-
-
 base_url = None
 
 
@@ -14,8 +12,6 @@ CURRENCIES = list(Account.CURRENCIES.keys())
 
 class ConversionAPIError(Exception):
     pass
-
-
 
 
 def build_request(request, source: str, target: str, amount: str) -> str:
@@ -28,7 +24,7 @@ def build_request(request, source: str, target: str, amount: str) -> str:
     else:
         url = request.get_host()
         protocol = protocol if request.is_secure() else "http://"
-        url = protocol + url + "/conversion/"
+        url = protocol + url + "/conversion"
 
 
     if source not in CURRENCIES or target not in CURRENCIES:
@@ -45,13 +41,13 @@ def build_request(request, source: str, target: str, amount: str) -> str:
         raise ValueError("Invalid value for amount")
 
 
-    return f"{url}/conversion/{source}/{target}/{amount}"
+    return f"{url}/{source}/{target}/{amount}"
 
 
 
 def call_conversion_api(request, source: str, target: str, amount: str):
     url = build_request(request, source, target, amount)
-    response = requests.get(url)
+    response = requests.get(url, timeout=1)
 
     if response.status_code == 200:
         return response.json()["result"]
@@ -62,4 +58,7 @@ def call_conversion_api(request, source: str, target: str, amount: str):
         raise ValueError(msg)
     else:
         raise ConversionAPIError
+
+
+
 
