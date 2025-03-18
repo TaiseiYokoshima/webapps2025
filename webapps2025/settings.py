@@ -37,11 +37,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    'django_extensions',
+    'django.contrib.sites',
+
     'register',
     'accounts',
     'payapp',
     'conversion',
-    'django_extensions',
 
 ]
 
@@ -130,3 +133,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 AUTH_USER_MODEL = "accounts.Account"
+SITE_ID = 1
