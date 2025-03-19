@@ -1,1 +1,0 @@
-services.tests.currency.test_call_conversion_api
