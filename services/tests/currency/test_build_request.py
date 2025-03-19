@@ -1,39 +1,23 @@
-from django.test import TestCase, RequestFactory
-
-
+from utils.currency import CurrencyAmount
 from ...currency import build_request
-
-
 import services.currency as glob
+from utils.test_utils import RequestBuilderBase
+
+class TestBuildRequest(RequestBuilderBase):
+    def assert_message(self, exception, messages, request, source, target, amount, *args, **kwargs):
+        if isinstance(messages, str):
+            self.assertRaisesMessage(exception, messages, build_request, request, source, target, amount, *args, **kwargs )
+            return
+
+        if not isinstance(messages, list):
+            raise Exception("Not a str or list of str")
 
 
-
-class TestBuildRequest(TestCase):
-
-    def setUp(self):
-        self.factory = RequestFactory()
-
-
-    def create_request(self):
-        request = self.factory.get("/")
-        request.get_host = lambda: "127.0.0.1:8000"
-
-        return request
-
-    def create_request_is_secure(self):
-        request = self.create_request()
-        request.is_secure = lambda: True  
-        return request
-
-    def create_request_not_secure(self):
-        request = self.create_request()
-        request.is_secure = lambda: False
-        return request
-
-
-    def assert_message(self, request, source, target, amount, exception, message):
-        with self.assertRaisesMessage(exception, message):
-            build_request(request, source, target, amount)
+        try:
+            build_request(request, source, target, amount, *args, **kwargs)
+        except exception as e:
+            msg = str(e)
+            self.assertTrue(msg in messages)
 
 
 
@@ -44,13 +28,13 @@ class TestBuildRequest(TestCase):
         request = self.create_request_not_secure()
 
 
-        self.assert_message(request, source, target, amount, ValueError, "Unsupported currency")
+        self.assert_message(ValueError, "Unsupported currency", request, source, target, amount)
 
 
         source = "USD"
         target = "USD"
 
-        self.assert_message(request, source, target, amount, ValueError, "Cannot convert to the same currency")
+        self.assert_message(ValueError, "Cannot convert to the same currency", request, source, target, amount)
 
     def test_valid_currencies(self):
         source = "USD"
@@ -69,10 +53,11 @@ class TestBuildRequest(TestCase):
         target = "EUR"
         request = self.create_request_not_secure()
 
+        messages = ["Cannot convert 0.00 " + source, CurrencyAmount.str_parse_error_msg]
         amounts = [".12.01", "-12.00", "12.0", "12.", "12", ".12", "12.111", "012.12", ".", "..", "...", "....", "00.00", "0.00", "0", "0.", "12.99999"]
 
         for amount in amounts:
-            self.assert_message(request, source, target, amount, ValueError, "Invalid value for amount")
+            self.assert_message(ValueError, messages, request, source, target, amount)
 
 
     def test_valid_amounts(self):
@@ -115,17 +100,15 @@ class TestBuildRequest(TestCase):
         source = "USD"
         target = "EUR"
         amount = "12.01"
-        glob.base_url = "example.com"
+        glob.external_api_url = "example.com"
         request = self.create_request()
 
             
         url = build_request(request, source, target, amount)
 
 
-        self.assertTrue(url.startswith("https://" + glob.base_url))
+        self.assertTrue(url.startswith("https://" + glob.external_api_url))
 
-    def tearDown(self) -> None:
-        glob.base_url = None
 
 
 

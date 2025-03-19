@@ -1,10 +1,7 @@
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-
-
-from utils.currency import invalid_amount_string, calculate_conversion_from_string
 
 
 
@@ -22,6 +19,9 @@ rates = {
         }
 
 
+from utils.currency import CurrencyAmount
+
+
 @require_GET
 def convert(request, source, target, amount):
 
@@ -34,14 +34,22 @@ def convert(request, source, target, amount):
     if source == target:
         return HttpResponseBadRequest("Cannot convert to the same currency")
 
-    if (invalid_amount_string(amount)):
-        return HttpResponseBadRequest("Invalid value for amount")
+    try:
+        amount = CurrencyAmount(amount)
+    except ValueError as e:
+        return HttpResponseBadRequest(str(e))
 
-    if (float(amount) == 0):
-        return HttpResponseBadRequest("Invalid value for amount")
+    
+    if (isinstance(amount, str)):
+        return HttpResponseServerError("Server errored, try again later")
+
+
+    if (amount == 0):
+        return HttpResponseBadRequest("Cannot convert 0.00 " + source)
 
     rate = rates[source][target]
-    result = calculate_conversion_from_string(amount, rate)
+    result = CurrencyAmount(amount) * CurrencyAmount(rate)
+    result = str(result.into())
 
 
     return JsonResponse({'result': result})

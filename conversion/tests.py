@@ -9,14 +9,10 @@ from http import HTTPStatus
 from .views import rates
 
 
-from utils.currency import calculate_conversion_from_string
+from utils.currency import CurrencyAmount
 
 
-
-
-# Create your tests here.
-
-class TestConversionCase(TestCase):
+class TestConversionEndPoint(TestCase):
     def make_request(self, source, target, amount):
         amount = quote(str(amount))
         return self.client.get(reverse('convert', args=[source, target, amount]))
@@ -51,7 +47,10 @@ class TestConversionCase(TestCase):
         for amount in amounts:
             response = self.make_request(source, target, amount)
             self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-            self.assertEqual(response.content.decode(), "Invalid value for amount")
+            
+            err_msg = response.content.decode()
+            check = err_msg == CurrencyAmount.str_parse_error_msg or err_msg == "Cannot convert 0.00 " + source
+            self.assertTrue(check)
 
 
     def test_valid_amounts(self):
@@ -72,7 +71,7 @@ class TestConversionCase(TestCase):
                     response = self.make_request(source, target, amount)
                     self.assertEqual(response.status_code, HTTPStatus.OK)
                     result = response.json()["result"]
-                    calculated = calculate_conversion_from_string(amount, rate)
+                    calculated = str((CurrencyAmount(amount) * CurrencyAmount(rate)).into())
                     self.assertEqual(result, calculated)
 
 
