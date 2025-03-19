@@ -17,7 +17,9 @@ class Account(AbstractUser):
     balance = models.DecimalField(max_digits=50, decimal_places=2, default=Decimal("750.00"), null=False, blank=False)
 
 
-    def get_default(field_name: str):
-        return Account._meta.get_field(field_name).default
+    @classmethod
+    def get_default(cls, field_name: str):
+        meta = getattr(cls, "_meta")
+        return meta.get_field(field_name).default
     
 
