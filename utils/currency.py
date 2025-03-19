@@ -1,56 +1,85 @@
-from decimal import Decimal, localcontext, ROUND_DOWN
+from decimal import Decimal, localcontext, ROUND_DOWN, Context
+from typing import Literal
+
+import re
 
 
-def invalid_amount_string(amount: str) -> bool:
-    parse_amount = amount.split(".")
 
-    if (
-            len(parse_amount) != 2 or 
-            parse_amount[0] == "" or 
-            parse_amount[1] == "" or 
-            len(parse_amount[1]) != 2
-        ):
-        return True
+
+ROUND_OPTION = Literal[
+        "ROUND_DOWN", "ROUND_UP", 
+]
+
+
+class CurrencyAmount(Decimal):
+    precision = 68
+    amount_ctx = Context(prec=precision)
+
+    str_parse_error_msg = "Invalid string for a currency amount"
+
+
+
+    @classmethod
+    def parse_str(cls, amount: str):
+        pattern = r'^(0|[1-9][0-9]*)\.[0-9]{2}$'
+        result = re.findall(pattern,amount)
+        if len(result) == 0:
+            raise ValueError(cls.str_parse_error_msg)
+
+    def __new__(cls, input: float | str | Decimal | int):
+        if isinstance(input, str):
+            cls.parse_str(input)
+
+        return super().__new__(cls, input)
 
     
-    for char in parse_amount[0]:
-        if not char.isdigit():
-            return True
+    def __check_type(self, other):
+        if not isinstance(other, CurrencyAmount):
+            raise TypeError(f"Unsupported operand type: {type(self)} and {type(other)}")
 
-     
-    for char in parse_amount[1]:
-        if not char.isdigit():
-            return True
+    def __OP(self, other, operation):
+        self.__check_type(other)
+        with localcontext(self.amount_ctx):
+            return CurrencyAmount(operation(Decimal(self), Decimal(other)))
 
+    def __add__(self, other):
+        operation = lambda x, y : x + y
+        return self.__OP(other, operation)
 
+    def __sub__(self, other):
+        operation = lambda x, y : x - y
+        return self.__OP(other, operation)
 
-    integer = parse_amount[0]
+    def __mul__(self, other):
+        operation = lambda x, y : x * y
+        return self.__OP(other, operation)
 
-    if (integer != str(int(integer))):
-        return True
-
-    if (integer != "0" and integer.startswith("0")):
-        return True
-
-
-
-    return False
-
-
-
-
-def set_decimal_places(value: Decimal, places: int) -> Decimal:
-    string = str("1." + "0" * places)
-    quantizer = Decimal(string)
-    return value.quantize(quantizer, rounding=ROUND_DOWN)
+    def __truediv__(self, other):
+        operation = lambda x, y : x / y
+        return self.__OP(other, operation)
 
 
+    def into(self, rounding: ROUND_OPTION = ROUND_DOWN) -> Decimal:
+        places = "1.00"
+        quantizer = Decimal(places)
+        return Decimal(self).quantize(quantizer, rounding=rounding)
 
-def calculate_conversion_from_string(amount: str, rate: float) -> str:
-    with localcontext() as ctx:
-        ctx.prec = 68
-        result  = Decimal(amount) * Decimal(rate)
-        return str(set_decimal_places(result, 2))
+    
+    
+
+
+        
+
+            
+
+
+
+
+
+
+
+
+
 
 
 

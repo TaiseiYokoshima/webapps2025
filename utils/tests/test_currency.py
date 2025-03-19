@@ -1,44 +1,93 @@
 from django.test import TestCase
 
-from ..currency import invalid_amount_string, calculate_conversion_from_string, set_decimal_places
 
-from decimal import Decimal, localcontext
-
+from decimal import ROUND_DOWN, Decimal, localcontext
 
 
-class TestCurrency(TestCase):
+from ..currency import CurrencyAmount
 
-    def test_invalid_amount_string(self):
 
-        amounts = ["01.00", "0.0.0", "0", "12", "12.0", "-12.00"]
+from conversion.views import rates
+
+
+
+class TestCustomDecimalType(TestCase):
+
+    def test_reject_strings_for_constructor(self):
+        amounts = [
+            "01.00", "0.0.0", "0", "12", "12.0", "-12.00", "0.0", "1.0", "1.", ".1", ".10", ".99" 
+        ]
 
         for amount in amounts:
-            result = invalid_amount_string(amount)
-            self.assertTrue(result)
+            self.assertRaisesMessage(ValueError, "Invalid string", CurrencyAmount, amount)
+                # CurrencyAmount(amount)
 
 
-    def test_set_decimal_places(self):
+
+    def test_accept_strings_for_constructor(self):
+        amounts = [
+            "1.00", "0.00", "12.00", "12.99", "111111111111111.99",
+        ]
+
+        for amount in amounts:
+                CurrencyAmount(amount)
+
+    def test_currency_conversions(self):
+        source = "GBP"
+        target = "EUR"
+        amount = CurrencyAmount("750.00")
+        rate = CurrencyAmount(rates[source][target])
+        
+
+        result = (amount * rate)
+
+        amount = "750.00"
+        rate= rates[source][target]
+
+        calculated = None
+
+
         with localcontext() as ctx:
-            ctx.prec = 50 + 18
+            ctx.prec = CurrencyAmount.precision
+            calculated = Decimal(amount) *  Decimal(rate)
 
-            string = str("1" * 25 + "." + "9" * 18)
-            value = Decimal(string)
-            result = str(set_decimal_places(value, 2))
+        self.assertEqual(result, calculated)
 
-            decimals = result.split(".")
+        result = result.into()
+        calculated = calculated.quantize(Decimal("0.00"), rounding=ROUND_DOWN)
 
-            self.assertEqual(2, len(decimals))
-            decimals = decimals[1]
-
-            self.assertEqual(2, len(decimals))
+        self.assertEqual(result, calculated)
     
 
-    def test_calculate_conversion_from_string(self):
-        amount = "111.11"
-        rate = 0.233
-        result = "25.88"
 
-        self.assertEqual(result, calculate_conversion_from_string(amount, rate))
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+        
+
+        
+
 
 
 
