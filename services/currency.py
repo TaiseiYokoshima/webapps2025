@@ -12,8 +12,9 @@ from utils.currency import CurrencyAmount
 # to use internal api keep it None
 external_api_url = None
 
+from conversion.views import rates
 
-CURRENCIES = list(Account.CURRENCIES.keys())
+CURRENCIES = list(rates.keys())
 
 class ConversionAPIError(Exception):
     pass
@@ -21,6 +22,8 @@ class ConversionAPIError(Exception):
 
 def build_request(request, source: str, target: str, amount: str) -> str:
     url = None
+
+
 
     if external_api_url is not None:
         url = external_api_url
@@ -31,6 +34,7 @@ def build_request(request, source: str, target: str, amount: str) -> str:
         url = request.get_host().replace("https://", "").replace("http://", "")
         protocol = "https://" if request.is_secure() else "http://"
         url = protocol + url
+
 
 
     if source not in CURRENCIES or target not in CURRENCIES:
@@ -49,14 +53,12 @@ def build_request(request, source: str, target: str, amount: str) -> str:
 
 
 def call_conversion_api(request, source: str, target: str, amount: str):
-
     url = build_request(request, source, target, amount)
     response = requests.get(url, timeout=1)
 
 
     if response.status_code == 200:
-        return response.json()["result"]
-
+        return response.json()
 
     if response.status_code == HTTPStatus.BAD_REQUEST:
         msg = response.content.decode()

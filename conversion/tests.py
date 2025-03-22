@@ -68,11 +68,22 @@ class TestConversionEndPoint(TestCase):
         for source, dic in rates.items():
             for target, rate in dic.items():
                 for amount in amounts:
-                    response = self.make_request(source, target, amount)
+                    response = self.make_request(source, target, str(amount))
                     self.assertEqual(response.status_code, HTTPStatus.OK)
-                    result = response.json()["result"]
-                    calculated = str((CurrencyAmount(amount) * CurrencyAmount(rate)).into())
-                    self.assertEqual(result, calculated)
 
+                    
+
+
+                    result = response.json()
+                    amount_str: str = result["amount"]
+                    rate_str: str = result["rate"]
+
+                    self.assertEqual(rate_str, str(rate))
+
+
+                    calculated = CurrencyAmount(amount) * CurrencyAmount(rate)
+                    calculated = str(calculated.into())
+
+                    self.assertEqual(amount_str, calculated)
 
 

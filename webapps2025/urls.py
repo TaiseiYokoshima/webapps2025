@@ -18,7 +18,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from django.shortcuts import HttpResponse
+# from django.shortcuts import HttpResponse
+from django.http.response import HttpResponse
 
 def home(request):
     return HttpResponse("Welcome Home!")

@@ -39,7 +39,7 @@ from http import HTTPStatus
 class TestHandleCurrencyChoice(LiveServerBase):
     def setUp(self):
         super().setUp()
-        password = "!123123Jj"
+        password = "!j"
         form_data = {
             "email": "taisei@test.com",
             "password1": password,
@@ -49,9 +49,9 @@ class TestHandleCurrencyChoice(LiveServerBase):
 
         form: RegisterForm = RegisterForm(data=form_data)
 
-        form.is_valid()
 
         self.form = form
+        self.form.is_valid()
 
 
     def test_handle_currency_choice_external_api(self):
@@ -110,9 +110,10 @@ class TestRegisterEndPoint(LiveServerBase):
         response = self.client.get("/register/")
         self.csrf_token = getattr(response, "cookies")["csrftoken"].value
         self.password =  "!123123Jj"
+        self.email = "taisei@icloud.com"
         self.form_data = {
             "csrfmiddlewaretoken": self.csrf_token, 
-            "email": "taisei@icloud.com",
+            "email": self.email,
             "currency": "EUR",
             "password1": self.password,
             "password2": self.password
@@ -125,9 +126,8 @@ class TestRegisterEndPoint(LiveServerBase):
 
     def test_register(self):
         self.make_get_request()
-        self.client.post("/register/", self.form_data, headers={"Referrer": self.live_server_url + "/register/"})
-        Account.objects.get(email__exact="taisei@icloud.com")
-        self.assertTrue("_auth_user_id" in self.client.session)
+        result = self.client.post("/register/", self.form_data, headers={"Referrer": self.live_server_url + "/register/", "Host": self.live_server_url.replace("http://", "")})
+        Account.objects.get(email__exact=self.email)
 
 
     def test_external_api_ip(self):

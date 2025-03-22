@@ -1,3 +1,4 @@
+from typing import assert_type
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 
 from django.http import JsonResponse
@@ -47,12 +48,16 @@ def convert(request, source, target, amount):
     if (amount == 0):
         return HttpResponseBadRequest("Cannot convert 0.00 " + source)
 
-    rate = rates[source][target]
-    result = CurrencyAmount(amount) * CurrencyAmount(rate)
-    result = str(result.into())
+
+    assert_type(rates[source][target], float)
+
+    rate: CurrencyAmount = CurrencyAmount(rates[source][target])
+    result : CurrencyAmount = amount * rate
+    result_str: str = str(result.into())
+    rate_str: str = str(rate)
 
 
-    return JsonResponse({'result': result})
+    return JsonResponse({'amount': result_str, "rate": rate_str})
 
     
 

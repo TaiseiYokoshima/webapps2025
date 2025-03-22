@@ -1,22 +1,31 @@
 from django.test import TestCase
 
 from accounts.models import Account
-from .models import Transfer
 
-# class TransactionTestCase(TestCase):
-#     def setUp(self):
-#         password = "123"
-#         self.sender = Account.objects.create(email="john@example.com", password=password)
-#         self.receiver = Account.objects.create(email="alex@example.com", password=password)
-#         self.transaction = Transfer.objects.create(sender=self.sender, receiver=self.receiver, amount=100)
-#
-#
-#
-#
-#     def test_transaction_creation(self):
-#         self.assertEqual(self.transaction.amount, 100)
-#
-#     def test_sender_and_receiver(self):
-#         self.assertEqual(self.transaction.sender.email, "john@example.com")
-#         self.assertEqual(self.transaction.receiver.email, "alex@example.com")
+from utils.test_utils import LiveServerBase, RequestBuilderBase
+
+from payapp.views import make_payment, make_request, TransferResult
+
+
+
+class TestMakePayment(LiveServerBase):
+
+    def setUp(self):
+        super().setUp()
+        password = "123"
+        self.sender = Account.objects.create(email="john@example.com", password=password)
+        # self.receiver = Account.objects.create(email="alex@example.com", password=password, currency="EUR")
+        self.receiver = Account.objects.create(email="alex@example.com", password=password)
+
+        self.sender.save()
+        self.receiver.save()
+
+
+    def test_valid(self):
+        request = self.create_request_not_secure()
+        sender = self.sender
+        receiver = self.receiver
+        amount = "10050.00"
+        result: TransferResult = make_payment(request, sender, receiver, amount)
+        account = Account.objects.get(email__exact="alex@example.com")
 

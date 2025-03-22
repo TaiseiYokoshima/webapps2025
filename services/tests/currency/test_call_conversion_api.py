@@ -1,5 +1,6 @@
 
 
+from utils import currency
 from ...currency import build_request, call_conversion_api, ConversionAPIError
 
 
@@ -91,8 +92,12 @@ class TestCallConversionAPI(LiveServerBase):
             calculated = CurrencyAmount(amount) * CurrencyAmount(rate)
             calculated = str(calculated.into())
             result = call_conversion_api(request, source, target, amount)
-            result = str(result)
-            self.assertEqual(result, calculated)
+            amount_got = result["amount"]
+            rate_got = result["rate"]
+
+
+            self.assertEqual(amount_got, calculated)
+            self.assertEqual(CurrencyAmount(rate), CurrencyAmount(rate_got))
 
 
     def test_external_api_with_domain(self):

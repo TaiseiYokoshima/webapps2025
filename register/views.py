@@ -22,10 +22,15 @@ def register_user_from_form(request, form: RegisterForm):
     if (default_currency == chosen_currency):
         user = form.save()
         return user
+    
 
     email = form.cleaned_data["email"]
     default_balance = str(Account.get_default("balance"))
-    balance = call_conversion_api(request, default_currency, chosen_currency, default_balance)
+
+    result = call_conversion_api(request, default_currency, chosen_currency, default_balance)
+
+
+    balance = result["amount"]
     password = form.cleaned_data["password1"]
 
 
@@ -45,11 +50,13 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
 
-
         if form.is_valid():
             try:
+
                 user = register_user_from_form(request, form)
-            except Exception:
+
+
+            except Exception as e:
                 return HttpResponseServerError("Internal server error, try again later")
 
 
@@ -57,7 +64,6 @@ def register(request):
             return redirect('home')
 
 
-        print("\n\n\n\nform was invalid:")
         print(form.errors.as_data(), end="\n\n\n\n")
     else:
         form = RegisterForm()
