@@ -8,7 +8,7 @@ class Payment(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     fee = models.DecimalField(max_digits=19, decimal_places=2, null=True)
     rate = models.DecimalField(max_digits=19, decimal_places=2, null=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2)
+    amount = models.DecimalField(max_digits=19, decimal_places=2, null=False)
 
 
 
@@ -27,7 +27,7 @@ class Request(models.Model):
     ]
         
 
-    status = models.CharField(max_length=1, choices=STATUS, default="P", null=False)
+    status = models.CharField(max_length=1, choices=STATUS,  null=False, default="P")
 
     
     
