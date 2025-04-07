@@ -52,6 +52,7 @@ def register_user_from_form(request, form: RegisterForm):
 def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
+        # print(form)
 
         if form.is_valid():
             try:
