@@ -15,6 +15,9 @@ from decimal import Decimal
 from accounts.models import Account
 
 
+from django.contrib import messages
+
+
 def register_user_from_form(request, form: RegisterForm):
     default_currency = Account.get_default("currency")
     chosen_currency = form.cleaned_data["currency"]
@@ -52,9 +55,7 @@ def register(request):
 
         if form.is_valid():
             try:
-
                 user = register_user_from_form(request, form)
-
 
             except Exception as e:
                 return HttpResponseServerError("Internal server error, try again later")
@@ -64,6 +65,7 @@ def register(request):
             return redirect('home')
 
 
+        messages.error(request, "Error")
         print(form.errors.as_data(), end="\n\n\n\n")
     else:
         form = RegisterForm()

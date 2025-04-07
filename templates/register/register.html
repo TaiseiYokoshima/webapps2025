@@ -6,7 +6,47 @@
 <h2>Register</h2>
 <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
+    {# {{ form.as_p }} #}
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %} mb-2"
+                 role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+    <label for="email" >Email</label>
+    <input type="email" name="email" id="id_email" class="form-control" required>
+
+    <label for="password1" >Password</label>
+    <input type="password" name="password1" id="id_password1" class="form-control" required>
+
+    <label for="password2" >Confirm Password</label>
+    <input type="password" name="password2" id="id_password2" class="form-control mb-2" required>
+
+
+    <ul>
+      <li>Your password can’t be too similar to your other personal information. </li>
+        <li>Your password must contain at least 8 characters. </li>
+        <li>Your password can’t be a commonly used password. </li>
+        <li>Your password can’t be entirely numeric. </li>
+    </ul>
+
+
+
+    <label for="choice" >Currency</label>
+    <select name="currency" id="id_currency" class="form-control">
+        <option value="GBP">GBP</option>
+        <option value="EUR">EUR</option>
+        <option value="USD">USD</option>
+    </select>
+
+
     <button type="submit">Register</button>
 </form>
 {% endblock %}

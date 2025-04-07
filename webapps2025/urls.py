@@ -21,12 +21,12 @@ from django.urls import path, include
 # from django.shortcuts import HttpResponse
 from django.http.response import HttpResponse
 
-def home(request):
-    return HttpResponse("Welcome Home!")
+from accounts.views import home
 
 urlpatterns = [
-    path("", home, name="home"),
     path("admin/", admin.site.urls),
+
+    path("", include("accounts.urls")),
 
     path("register/", include("register.urls")),
     path('conversion/', include('conversion.urls')),
