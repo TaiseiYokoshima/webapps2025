@@ -2,75 +2,69 @@ from django import forms
 
 from accounts.models import Account
 
-
-from decimal import Decimal
-
-
 from utils.currency import CurrencyAmount
 
+from typing import Tuple
 
 
-from .models import Payment
-
-class PaymentForm(forms.ModelForm):
+class TransferForm(forms.Form):
     email = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={"autofocus": True}), max_length=254)
-    amount = forms.DecimalField(label="Amount", min_value=1, max_digits=10, decimal_places=2)
+    amount = forms.DecimalField(label="Amount")
 
-
-    class Meta:
-        model = Payment
-        fields = ['receiver', 'amount']
-
-
-    def __init__(self, *args, sender=None, **kwargs):
+    def __init__(self, *args, user: Account|None=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sender = sender 
+
+        if user is None:
+            raise forms.ValidationError("Must provide the user")
+
+        self.user: Account = user 
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
 
+        if email == self.user.email:
+            raise forms.ValidationError("You cannot use your own email")
+
         try:
-            self.receiver = Account.objects.get(email=email)
+            self.checked_user = Account.objects.get(email=email)
         except Account.DoesNotExist: 
-            raise forms.ValidationError("User doesn't exist")
+            raise forms.ValidationError("Account doesn't exist")
 
         return email
 
 
-    def clean(self):
-        if self.sender is None:
-            raise forms.ValidationError("Sender not provided")
+    def clean_amount(self):
+        amount = self.cleaned_data.get("amount") 
 
-        amount_str: str | None = str(self.cleaned_data.get("amount"))
+        if amount is None:
+            raise forms.ValidationError("Amount not provided")
 
-        if amount_str is None: 
-            self.add_error("amount", "Amount not provided")
-            return
+        if amount < 1:
+            raise forms.ValidationError("Minimum amount is 1.00 " + self.user.currency)
 
+        amount_str = str(amount).split(".")
 
-        amount = CurrencyAmount(amount_str).into()
-        
-        balance = Decimal(self.sender.balance)
-
-        if amount > balance:
-            self.add_error("amount", "Insufficient Funds")
-            return 
+        if len(amount_str) == 2 and len(amount_str[1]) > 2:
+            raise forms.ValidationError("Amount should be in the format 100.00. Only two decimal places are allowed.")
 
 
-        def save(self, commit=True):
-            payment = super().save(commit=False)
-            payment.sender = self.user
-            payment.recipient = self.recipient
-            if commit:
-                payment.save()
-                # update balances
-                self.user.balance -= payment.amount
-                self.recipient.balance += payment.amount
-                self.user.save()
-                self.recipient.save()
-            return 
+        self.amount: CurrencyAmount = CurrencyAmount(amount)
+        return amount
 
 
+    def get_payment_data(self) -> Tuple[Account, Account, CurrencyAmount]:
+        sender: Account = self.user
+        receiver = self.checked_user
+        amount = self.amount
+
+        return sender, receiver, amount
 
 
-    
+    def get_request_data(self) -> Tuple[Account, Account, CurrencyAmount]:
+        receiver = self.user
+        sender = self.checked_user
+        amount = self.amount
+
+        return sender, receiver, amount
+
+

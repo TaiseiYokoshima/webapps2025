@@ -13,6 +13,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
 
+from django.contrib import messages
+
+
 from typing import Union, Type
 
 from accounts.models import Account
@@ -21,21 +24,22 @@ from .models import Request
 
 
 
-from .forms import PaymentForm
+from .forms import TransferForm
 
 
 class TransferResult(Enum):
-    Ok = "success",
-    InsufficientFunds = "Failed to make payment due to insufficient funds",
-    CurrencyExchangFaillure = "Server error due to currency conversion",
-    InvalidStringValueForAmount = "Invalid string value for currency amount",
+    Ok = "success"
+    InsufficientFunds = "Failed to make payment due to insufficient funds"
+    CurrencyExchangFaillure = "Server error due to currency conversion"
+    InvalidStringValueForAmount = "Invalid string value for currency amount"
     TransactionFailure = "Server error due to transaction failure"
 
 
 @transaction.atomic()
-def make_transfer(request, sender: Account, receiver: Account, amount_str: str, Model: Union[Type[Payment], Type[Request]]) -> TransferResult:
+def make_transfer(request, sender: Account, receiver: Account, amount_str: CurrencyAmount, Model: Union[Type[Payment], Type[Request]]) -> TransferResult:
     amount = None
     rate = CurrencyAmount(1)
+
     try:
         amount = CurrencyAmount(amount_str)
     except Exception:
@@ -54,7 +58,7 @@ def make_transfer(request, sender: Account, receiver: Account, amount_str: str, 
 
     if (source != target):
         try:
-            result_json = call_conversion_api(request, source, target, amount_str)
+            result_json = call_conversion_api(request, source, target, str(amount_str.into()))
             receiver_add = CurrencyAmount(result_json["amount"])
             rate = CurrencyAmount(Decimal(result_json["amount"]))
         except Exception:
@@ -77,11 +81,11 @@ def make_transfer(request, sender: Account, receiver: Account, amount_str: str, 
 
     return TransferResult.Ok
 
-def make_payment(request, sender: Account, receiver: Account, amount_str: str):
+def make_payment(request, sender: Account, receiver: Account, amount_str: CurrencyAmount):
     return make_transfer(request, sender, receiver, amount_str, Payment)
 
 
-def make_request(request, sender: Account, receiver: Account, amount_str: str):
+def make_request(request, sender: Account, receiver: Account, amount_str: CurrencyAmount):
     return make_transfer(request, sender, receiver, amount_str, Request)
 
 
@@ -95,15 +99,28 @@ def make_tranfer(request, transfer_type):
     if request.method != "POST":
         return HttpResponseForbidden()
 
-    form = PaymentForm(request.POST, sender=request.user)
+    form = TransferForm(request.POST, user=request.user)
+    form_invalid = not form.is_valid()
+    if form_invalid:
+        exception = (list(form.errors.as_data().values())[0][0]).messages[0]
+        messages.error(request, exception)
 
-    form_is_valid = form.is_valid()
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type, "form": form})
+    
 
 
+    form_func = form.get_payment_data if transfer_type == "payment" else form.get_request_data
+    transfer_func = make_payment if transfer_type == "payment" else make_request
 
-    print(form_is_valid)
-    print(form.errors.as_data())
 
+    sender, receiver, amount = form_func()
+
+    result = transfer_func(request, sender, receiver, amount)
+
+
+    if result != TransferResult.Ok:
+        messages.error(request, result.value)
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type, "form": form})
 
 
     return redirect("home")

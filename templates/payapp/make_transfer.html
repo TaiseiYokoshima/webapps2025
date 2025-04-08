@@ -22,10 +22,10 @@
 
 
           <label for="email" >Receiver's Email</label>
-          <input type="email" name="email" id="id_email" class="form-control" required>
+          <input type="email" name="email" id="id_email" class="form-control" required value="{{ form.email.value|default:'' }}">
 
           <label for="amount" >Amount</label>
-          <input type="number" name="amount" id="id_amount" class="form-control mb-2" required>
+          <input type="number" name="amount" id="id_amount" class="form-control mb-2" required step="0.01" value="{{ form.amount.value|default:'' }}">
 
 
           <button type="submit">Confirm</button>
