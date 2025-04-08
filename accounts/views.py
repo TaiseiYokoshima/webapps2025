@@ -15,7 +15,7 @@ from .models import Account
 
 @login_required
 def home(request):
-    return HttpResponse("Welcome Home!")
+    return render(request, "accounts/home.html" )
 
 @login_required
 def sign_out(request):
@@ -41,6 +41,7 @@ def sign_in(request):
             
             
 
+        print(form.errors.as_data())
         messages.error(request, "Invalid login")
     
     else:

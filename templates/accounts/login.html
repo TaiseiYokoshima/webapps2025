@@ -1,7 +1,4 @@
-{% extends "base.html" %}
-
-
-
+{% extends "signed_out.html" %}
 {% block content %}
 <h2>Signin</h2>
 <form method="POST">
@@ -21,7 +18,7 @@
 
 
     <label for="email" >Email</label>
-    <input type="email" name="email" id="id_email" class="form-control" required>
+    <input type="email" name="username" id="id_username" class="form-control" required>
 
     <label for="password" >Confirm Password</label>
     <input type="password" name="password" id="id_password" class="form-control mb-2" required>

@@ -14,9 +14,13 @@
             crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="container-fluid">
-    {% block content %}
-    {% endblock %}
-</div>
+{# <div class="container-fluid"> #}
+  {% block nav %}
+  {% endblock %}
+
+  {% block content %}
+  {% endblock %}
+
+{# </div> #}
 </body>
 </html>
