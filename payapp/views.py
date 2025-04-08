@@ -53,8 +53,9 @@ def make_transfer(request, sender: Account, receiver: Account, amount_str: Curre
     sender_subtract = amount
     receiver_add = amount
 
-    if (sender.balance < amount.into()):
+    if (Model is Payment and sender.balance < amount.into()):
         return TransferResult.InsufficientFunds
+
 
     if (source != target):
         try:
@@ -71,7 +72,7 @@ def make_transfer(request, sender: Account, receiver: Account, amount_str: Curre
     sender.balance = sender_result.into()
     receiver.balance = receiver_result.into()
 
-    transfer = Model(sender=sender, receiver=receiver, rate=rate, amount=Decimal(amount))
+    transfer = Model(sender=sender, receiver=receiver, rate=rate, amount=amount.into())
 
     if Model is Payment:
         sender.save()
