@@ -1,7 +1,16 @@
 from decimal import Decimal
 from enum import Enum
+
+from django.contrib.auth.decorators import login_required
+from django.http.response import HttpResponseForbidden
 from services.currency import CurrencyAmount, call_conversion_api
 from django.db import transaction
+
+
+from django.contrib.auth.decorators import login_required
+
+
+from django.shortcuts import render, redirect
 
 
 from typing import Union, Type
@@ -10,6 +19,9 @@ from accounts.models import Account
 from .models import Payment
 from .models import Request
 
+
+
+from .forms import PaymentForm
 
 
 class TransferResult(Enum):
@@ -71,6 +83,38 @@ def make_payment(request, sender: Account, receiver: Account, amount_str: str):
 
 def make_request(request, sender: Account, receiver: Account, amount_str: str):
     return make_transfer(request, sender, receiver, amount_str, Request)
+
+
+
+
+@login_required
+def make_tranfer(request, transfer_type):
+    if request.method == "GET":
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type})
+
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    form = PaymentForm(request.POST, sender=request.user)
+
+    form_is_valid = form.is_valid()
+
+
+
+    print(form_is_valid)
+    print(form.errors.as_data())
+
+
+
+    return redirect("home")
+
+
+
+
+
+
+
+
 
 
 

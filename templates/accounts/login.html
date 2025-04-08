@@ -1,9 +1,13 @@
 {% extends "signed_out.html" %}
 {% block content %}
+
+
+<div style="display: flex; height: calc(100vh - {{ nav_height }}); background-color: black;">
+<div class="d-flex justify-content-center align-items-center flex-column flex-grow-1 ">
+<div class="rounded shadow p-5 w-50 h-50" style="background-color: white; margin-bottom: 20vh;">
 <h2>Signin</h2>
 <form method="POST">
     {% csrf_token %}
-    {# {{ form.as_p }} #}
 
     {% if messages %}
     <div class="mb-3">
@@ -20,10 +24,16 @@
     <label for="email" >Email</label>
     <input type="email" name="username" id="id_username" class="form-control" required>
 
-    <label for="password" >Confirm Password</label>
+    <label for="password" >Password</label>
     <input type="password" name="password" id="id_password" class="form-control mb-2" required>
 
 
     <button type="submit">Signin</button>
 </form>
+
+
+  </div>
+</div>
+
+</div>
 {% endblock %}

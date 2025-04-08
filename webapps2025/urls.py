@@ -30,8 +30,7 @@ urlpatterns = [
 
     path("register/", include("register.urls")),
     path('conversion/', include('conversion.urls')),
+    path('', include('payapp.urls')),
 
 
-
-    path('accounts/', include('django.contrib.auth.urls')),
 ]

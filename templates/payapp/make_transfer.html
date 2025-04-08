@@ -1,0 +1,40 @@
+{% extends "signed_in.html" %}
+{% block content %}
+
+<div style="display: flex; height: calc(100vh - {{ nav_height }}); background-color: black;">
+  <div class="d-flex justify-content-center align-items-center flex-column flex-grow-1 ">
+    <div class="rounded shadow p-5 w-50 h-50" style="background-color: white; margin-bottom: 20vh;">
+
+      <h2>Make {% if transfer_type == "payment" %}Payment{% else %}Request{% endif %}</h2>
+      <form method="POST">
+          {% csrf_token %}
+
+          {% if messages %}
+          <div class="mb-3">
+              {% for message in messages %}
+                  <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %} mb-2"
+                       role="alert">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          </div>
+          {% endif %}
+
+
+          <label for="email" >Receiver's Email</label>
+          <input type="email" name="email" id="id_email" class="form-control" required>
+
+          <label for="amount" >Amount</label>
+          <input type="number" name="amount" id="id_amount" class="form-control mb-2" required>
+
+
+          <button type="submit">Confirm</button>
+      </form>
+
+
+      
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -13,14 +13,26 @@
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"></script>
 </head>
-<body>
-{# <div class="container-fluid"> #}
+
+
+<body style="overflow: hidden;">
+
+
+
+
+{% with nav_height="7vh" %}
+
   {% block nav %}
   {% endblock %}
+
 
   {% block content %}
   {% endblock %}
 
-{# </div> #}
+{% endwith %}
+
+
+
+
 </body>
 </html>

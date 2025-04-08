@@ -15,10 +15,13 @@ from .models import Account
 
 @login_required
 def home(request):
-    return render(request, "accounts/home.html" )
+    user = request.user
+    passon = {"balance": user.balance, "currency": user.currency }
+    return render(request, "accounts/home.html",  passon)
 
 @login_required
 def sign_out(request):
+    print("\n\nlogging out\n\n")
     logout(request)
     return redirect('login')
 
