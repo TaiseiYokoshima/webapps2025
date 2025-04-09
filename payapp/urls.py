@@ -12,5 +12,11 @@ urlpatterns = [
 
     path("payments", views.view_payments, name="payments"),
     path("requests", views.view_requests, name="requests"),
+
+    path("notifications", views.view_notifications, name="notifications"),
+
+    path("mark_read", views.mark_read, name="mark_read"),
+    path("mark_unread", views.mark_unread, name="mark_unread"),
+    path("delete_notification", views.delete_notifications, name="delete_notification"),
 ]
 

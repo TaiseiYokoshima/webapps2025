@@ -24,6 +24,7 @@ from typing import Union, Type
 from accounts.models import Account
 from .models import Payment
 from .models import Request
+from .models import Notification
 
 
 
@@ -393,3 +394,126 @@ def deny_request(request):
 
 
     return redirect("requests")
+
+
+
+
+@login_required
+def view_notifications(request):
+    account = request.user
+
+    notifcations = Notification.objects.filter( Q(user=account)  ).order_by("-date")
+
+    return render(request, "payapp/notifications.html", { 'notifications': notifcations } )
+
+
+
+@login_required
+def mark_read(request):
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+
+    notification_id = request.POST.get("notification_id")
+
+    
+    notification = Notification.objects.filter(id=notification_id).first()
+
+    if notification is None:
+        messages.error(request, "Notification not found")
+        return redirect("notifications")
+
+    if notification.status == "R":
+        return redirect("notifications")
+
+
+
+    notification.status = "R"
+
+    try:
+        with transaction.atomic():
+            notification.save()
+
+    except Exception as e:
+        print(e)
+        messages.error(request, "Failed to mark notificaition as read")
+
+
+
+    return redirect("notifications")
+
+
+
+
+@login_required
+def mark_unread(request):
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    notification_id = request.POST.get("notification_id")
+
+    
+    notification = Notification.objects.filter(id=notification_id).first()
+
+    if notification is None:
+        messages.error(request, "Notification not found")
+        return redirect("notifications")
+
+    if notification.status == "U":
+        return redirect("notifications")
+
+
+
+    notification.status = "U"
+
+    try:
+        with transaction.atomic():
+            notification.save()
+
+    except Exception as e:
+        print(e)
+        messages.error(request, "Failed to mark notificaition as read")
+
+
+
+    return redirect("notifications")
+
+
+@login_required
+def delete_notifications(request):
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    notification_id = request.POST.get("notification_id")
+
+    
+    notification = Notification.objects.filter(id=notification_id).first()
+
+    if notification is None:
+        messages.error(request, "Notification not found")
+        return redirect("notifications")
+
+
+    try:
+        with transaction.atomic():
+            notification.delete()
+
+    except Exception as e:
+        print(e)
+        messages.error(request, "Failed to delete notificaition")
+
+
+
+    return redirect("notifications")
+
+
+def unread_notifications(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    count = Notification.objects.filter(user=request.user, status="U").count()
+    if count < 1:
+        return {}
+
+    return {"unread_notifications": count}
+
