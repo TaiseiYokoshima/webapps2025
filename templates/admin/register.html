@@ -1,9 +1,9 @@
-{% extends "signed_out.html" %}
+{% extends "admin_signed_out.html" %}
 
 
 
 {% block content %}
-<h2 class="ms-5 me-5">Register</h2>
+<h2 class="ms-5 me-5">Admin Register</h2>
 <form method="POST" class="ms-5 me-5">
     {% csrf_token %}
     {# {{ form.as_p }} #}
@@ -19,14 +19,9 @@
     </div>
     {% endif %}
 
-    <label for="fullname" >Fullname</label>
-    <input type="name" name="fullname" id="id_fullname" class="form-control" required>
 
-    <label for="email" >Email</label>
-    <input type="email" name="email" id="id_email" class="form-control" required>
-
-    <label for="username" >Username</label>
-    <input type="username" name="username" id="id_username" class="form-control" required>
+    <label for="email" >Username</label>
+    <input type="username" name="email" id="id_email" class="form-control" required>
 
     <label for="password1" >Password</label>
     <input type="password" name="password1" id="id_password1" class="form-control" required>
@@ -43,13 +38,6 @@
     </ul>
 
 
-
-    <label for="choice" >Currency</label>
-    <select name="currency" id="id_currency" class="form-control">
-        <option value="GBP">GBP</option>
-        <option value="EUR">EUR</option>
-        <option value="USD">USD</option>
-    </select>
 
 
     <button type="submit">Register</button>

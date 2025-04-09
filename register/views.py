@@ -72,8 +72,8 @@ def register(request):
             return redirect('home')
 
 
-        messages.error(request, "Error")
-        print(form.errors.as_data(), end="\n\n\n\n")
+        exception = (list(form.errors.as_data().values())[0][0]).messages[0]
+        messages.error(request, exception)
     else:
         form = RegisterForm()
     

@@ -11,9 +11,19 @@ from django.contrib import messages
 
 from utils.currency import CurrencyAmount
 
+from django.contrib.auth.decorators import user_passes_test
 
 from .forms import LoginForm
 from .models import Account
+
+
+
+def is_non_superuser(user):
+    return user.is_authenticated and not user.is_superuser
+
+
+login_required = user_passes_test(is_non_superuser)
+
 
 @login_required
 def home(request):
@@ -29,7 +39,7 @@ def sign_out(request):
 
 
 def sign_in(request):
-    if request.user.is_authenticated: 
+    if is_non_superuser(request.user): 
         return redirect("home")
 
     if request.method == "POST":

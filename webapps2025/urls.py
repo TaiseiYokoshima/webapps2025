@@ -24,7 +24,7 @@ from django.http.response import HttpResponse
 from accounts.views import home
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("admin/", include("admin.urls")),
 
     path("", include("accounts.urls")),
 

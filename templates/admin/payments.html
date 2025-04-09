@@ -1,0 +1,77 @@
+{% extends "admin_signed_in.html" %}
+{% block content %}
+
+<div style="display: flex; height: calc(100vh - {{ nav_height }}); background-color: black;">
+  <div class="d-flex justify-content-center align-items-center flex-column flex-grow-1 ">
+    <div class="rounded shadow p-5 w-50" style="background-color: white; height: calc( calc(100vh - {{ nav_height }}) * 0.8 ); display: flex; flex-direction: column;">
+      <h2>Payments</h2>
+
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %} mb-2"
+                 role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+
+
+
+      <div class="container mt-4" style="overflow-y: auto;">
+
+  {% if payments %}
+    <div class="list-group" style="overflow-y: auto;">
+
+
+      {% for payment in payments %}
+
+        <div class="list-group-item d-flex justify-content-between align-items-center" style="overflow-y: auto;">
+
+          <div>
+
+
+            {% if payment.incoming %}
+            <strong>From:</strong> {{ payment.sender.email }}<br>
+            {% else %}
+            <strong>To:</strong> {{ payment.receiver.email }}<br>
+            {% endif %}
+
+            <strong>Date:</strong> {{ payment.date|date:"Y-m-d H:i" }}
+          </div>
+
+
+            {% if payment.incoming %}
+              <strong style="color: green;">+ {{ payment.receiver_amount }}</strong>
+            {% else %}
+              <strong style="color: red;">- {{ payment.sender_amount }}</strong>
+            {% endif %}
+
+
+        </div>
+
+      {% endfor %}
+
+
+
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      No payments found.
+    </div>
+  {% endif %}
+
+
+
+
+
+
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -19,6 +19,8 @@ class Account(AbstractUser):
     currency = models.CharField(max_length=3, choices=CURRENCIES, null=False, blank=False, default="GBP")
     username = models.CharField(max_length=50, blank=True, null=True, unique=True)
     balance = models.DecimalField(max_digits=precision, decimal_places=places, default=Decimal("750.00"), null=False, blank=False)
+    first_name = models.CharField(max_length=20)
+    last_name = models.CharField(max_length=20)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

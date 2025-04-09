@@ -1,13 +1,9 @@
 {% extends "base.html" %}
 {% block nav %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="min-height: {{ nav_height }}; max-height: {{ nav_height }};">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark h-{{ nav_height }}">
   <div class="container-fluid">
 
     <a class="navbar-brand" href="/">PayApp</a>
-    <div>{{ user.email }}</div>
-
-    <div class="ms-4"><a class="nav-link" href="/notifications">Notifications {{ unread_notifications }}</a></div>
-
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -16,19 +12,13 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav ms-auto">
         <a class="nav-link active" aria-current="page" href="/admin">Admin</a>
-        <a class="nav-link active" aria-current="page" href="">Home</a>
-        <a class="nav-link" href="/payments">Payments</a>
-        <a class="nav-link" href="/requests">Requests</a>
-
-
-        <a class="nav-link" href="/logout/">Sign Out</a>
+        <a class="nav-link" href="/admin/login">Login</a>
       </div>
     </div>
 
 
   </div>
 </nav>
-
 {% endblock %}
 
 

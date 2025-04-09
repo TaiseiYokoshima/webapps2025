@@ -1,7 +1,6 @@
 from decimal import Decimal
 from enum import Enum
 
-from django.contrib.auth.decorators import login_required
 from django.http.response import HttpResponseForbidden, HttpResponseServerError
 from services.currency import CurrencyAmount, call_conversion_api
 from django.db import IntegrityError, transaction
@@ -30,6 +29,8 @@ from .models import Notification
 
 from .forms import TransferForm
 
+
+from accounts.views import login_required
 
 class TransferResult(Enum):
     Ok = "success"
