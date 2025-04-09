@@ -13,6 +13,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
 
+from django.db.models import Q
+
+
 from django.contrib import messages
 
 
@@ -126,6 +129,27 @@ def make_tranfer(request, transfer_type):
 
     return redirect("home")
 
+
+@login_required
+def view_payments(request):
+    account = request.user
+
+
+    payments = Payment.objects.filter( Q(sender=account) | Q(receiver=account) ).order_by("-date")
+
+
+
+    for payment in payments:
+        payment.incoming = payment.receiver == account
+
+
+
+
+    return render(request, "payapp/payments.html", {'payments': payments} )
+
+@login_required
+def view_requests(request):
+    return render(request, "payapp/requests.html")
 
 
 
