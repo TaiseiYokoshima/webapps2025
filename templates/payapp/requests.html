@@ -50,6 +50,7 @@
 
 
               {% if request.status == "Pending" and request.sender == user %}
+
               <form action="{% url 'approve' %}" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="request_id" value="{{ request.id }}">
@@ -57,6 +58,18 @@
                 <button class="btn btn-primary ms-5" style="cursor: pointer;" onclick="this.onsest('form').submit();">
                   ACCEPT
                 </button>
+              </form>
+
+              <form action="{% url 'deny' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="request_id" value="{{ request.id }}">
+
+                <button class="btn btn-danger ms-5" style="cursor: pointer;" onclick="this.onsest('form').submit();">
+                  DENY
+                </button>
+              </form>
+
+
               {% endif %}
 
           </div>

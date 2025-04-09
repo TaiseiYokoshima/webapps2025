@@ -1,0 +1,87 @@
+from django.db import models
+
+from utils.currency import CurrencyAmount, precision, places
+
+
+from django.dispatch import receiver
+
+
+class Payment(models.Model):
+    sender = models.ForeignKey("accounts.Account" , on_delete=models.SET_NULL, null=True, related_name="payment_sender")
+    receiver = models.ForeignKey("accounts.Account", on_delete=models.SET_NULL, null=True, related_name="payment_receiver")
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    rate = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+
+    sender_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+    receiver_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['sender', 'receiver', 'date'])
+        ]
+        ordering = ['-date']
+
+
+
+class Request(models.Model):
+    STATUS = [ 
+        ("P", "Pending"),
+        ("A", "Approved"), 
+        ("D", "Denied")
+    ]
+
+    status = models.CharField(max_length=1, choices=STATUS,  null=False, default="P")
+
+    
+    sender = models.ForeignKey("accounts.Account" , on_delete=models.SET_NULL, null=True, related_name="request_sender")
+    receiver = models.ForeignKey("accounts.Account", on_delete=models.SET_NULL, null=True, related_name="request_receiver")
+    
+    date = models.DateTimeField(auto_now_add=True)
+    
+    rate = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+
+    receiver_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+    sender_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+
+
+
+class Notification(models.Model):
+    STATUS = [
+        ("U", "Unread"),
+        ("R", "Read"),
+    ]
+
+    n_type = [
+        ("P", "Payment"),
+        ("R", "Request"),
+
+    ]
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=1, choices=STATUS,  null=False, default="U")
+    n_type = models.CharField(max_length=1, choices=STATUS, null=False)
+    user_id = models.ForeignKey("accounts.Account" , on_delete=models.CASCADE, related_name="notification_owner")
+    paymnet_id = models.ForeignKey("payapp.Payment" , on_delete=models.SET_NULL, null=True, related_name="payment_id")
+    request_id = models.ForeignKey("payapp.Request" , on_delete=models.SET_NULL, null=True, related_name="request_id")
+    message = models.CharField(max_length=200, null=False)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'date'])
+        ]
+        ordering = ['-date']
+
+
+
+
+
+
+
+
+
+    

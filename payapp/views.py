@@ -280,8 +280,13 @@ def non_atomic_apply_request(request: Request) -> TransferResult:
 
 
     payment: Payment = Payment(
-            sender=sender, receiver=receiver, 
-            sender_amount=sender_amount, receiver_amount=receiver_amount, rate=rate) 
+        sender=sender, 
+        receiver=receiver, 
+        sender_amount=sender_amount, 
+        receiver_amount=receiver_amount, 
+        rate=rate, 
+        from_request=True
+    ) 
 
     payment.save()
 
@@ -312,6 +317,7 @@ def approve_request(request):
     if request.method != "POST":
         return HttpResponseForbidden()
 
+    user = request.user
     request_id = request.POST.get("request_id")
 
     approved_request: Request | None = Request.objects.filter(id=request_id).first()
@@ -322,11 +328,13 @@ def approve_request(request):
         return redirect("requests")
 
     if approved_request.status != "P":
-        messages.error(request, "Request can be accepted if pending")
+        messages.error(request, "Request can only be accepted if pending")
         return redirect("requests")
 
 
-    user = request.user
+    if approved_request.sender != user:
+        messages.error(request, "Sender mismatch")
+        return redirect("requests")
 
 
     result: TransferResult = apply_request(approved_request)
@@ -341,14 +349,47 @@ def approve_request(request):
         messages.error(request, "Failed due to server error. Try again later.")
         return redirect("requests")
 
+    if approved_request.sender != request.user:
+        messages.error(request, "Sender mismatch")
+        return redirect("requests")
 
     return redirect("requests")
 
 
 
+@login_required
+def deny_request(request):
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    user = request.user
+    request_id = request.POST.get("request_id")
+
+    approved_request: Request | None = Request.objects.filter(id=request_id).first()
+
+
+    if approved_request is None:
+        messages.error(request, "Accepted request does not exist")
+        return redirect("requests")
+
+    if approved_request.status != "P":
+        messages.error(request, "Request can only be denied if pending")
+        return redirect("requests")
+
+    if approved_request.sender != request.user:
+        messages.error(request, "Sender mismatch")
+        return redirect("requests")
+
+
+    try:
+        with transaction.atomic():
+            approved_request.status = "D"
+            approved_request.save()
+
+    except Exception as e:
+        print(e)
+        messages.error(request, "Failed to deny request due to transaction error")
 
 
 
-
-
-
+    return redirect("requests")
