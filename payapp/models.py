@@ -1,13 +1,18 @@
 from django.db import models
 
+from utils.currency import CurrencyAmount, precision, places
+
 
 class Payment(models.Model):
     sender = models.ForeignKey("accounts.Account" , on_delete=models.SET_NULL, null=True, related_name="payment_sender")
     receiver = models.ForeignKey("accounts.Account", on_delete=models.SET_NULL, null=True, related_name="payment_receiver")
+
     date = models.DateTimeField(auto_now_add=True)
-    fee = models.DecimalField(max_digits=19, decimal_places=2, null=True)
-    rate = models.DecimalField(max_digits=19, decimal_places=2, null=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, null=False)
+
+    rate = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+
+    sender_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+    receiver_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
 
 
     class Meta:
@@ -15,7 +20,6 @@ class Payment(models.Model):
             models.Index(fields=['sender', 'receiver', 'date'])
         ]
         ordering = ['-date']
-
 
 
 
@@ -31,11 +35,12 @@ class Request(models.Model):
     
     sender = models.ForeignKey("accounts.Account" , on_delete=models.SET_NULL, null=True, related_name="request_sender")
     receiver = models.ForeignKey("accounts.Account", on_delete=models.SET_NULL, null=True, related_name="request_receiver")
-    date = models.DateTimeField(auto_now_add=True)
-    fee = models.DecimalField(max_digits=19, decimal_places=2, null=True)
-    rate = models.DecimalField(max_digits=19, decimal_places=2, null=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, null=False)
     
+    date = models.DateTimeField(auto_now_add=True)
+    
+    rate = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
 
+    receiver_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
+    sender_amount = models.DecimalField(max_digits=precision, decimal_places=places, null=False)
 
 

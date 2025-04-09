@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
 
+import re
 
 from_gbp = { "EUR": 1.19, "USD": 1.29 }
 
@@ -35,15 +36,11 @@ def convert(request, source, target, amount):
     if source == target:
         return HttpResponseBadRequest("Cannot convert to the same currency")
 
-    try:
-        amount = CurrencyAmount(amount)
-    except ValueError as e:
-        return HttpResponseBadRequest(str(e))
 
-    
-    if (isinstance(amount, str)):
-        return HttpResponseServerError("Server errored, try again later")
+    if not CurrencyAmount.parse_str_strict(amount):
+        return HttpResponseBadRequest(CurrencyAmount.str_parse_error_msg)
 
+    amount = CurrencyAmount(amount)
 
     if (amount == 0):
         return HttpResponseBadRequest("Cannot convert 0.00 " + source)

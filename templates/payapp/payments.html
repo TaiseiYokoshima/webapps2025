@@ -32,9 +32,9 @@
 
 
             {% if payment.incoming %}
-              <strong style="color: green;">+ {{ payment.amount }}</strong>
+              <strong style="color: green;">+ {{ payment.receiver_amount }}</strong>
             {% else %}
-              <strong style="color: red;">- {{ payment.amount }}</strong>
+              <strong style="color: red;">- {{ payment.sender_amount }}</strong>
             {% endif %}
 
 

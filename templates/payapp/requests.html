@@ -1,0 +1,118 @@
+{% extends "signed_in.html" %}
+{% block content %}
+
+<div style="display: flex; height: calc(100vh - {{ nav_height }}); background-color: black;">
+<div class="d-flex justify-content-center align-items-center flex-column flex-grow-1 ">
+
+
+<div class="rounded shadow p-5 w-50" style="background-color: white; height: calc( calc(100vh - {{ nav_height }}) * 0.8 ); display: flex; flex-direction: column;">
+
+  <h2>Requests</h2>
+
+
+  {% if messages %}
+  <div class="mb-3">
+      {% for message in messages %}
+          <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %} mb-2"
+               role="alert">
+              {{ message }}
+          </div>
+      {% endfor %}
+  </div>
+  {% endif %}
+
+
+  <div class="container mt-4" style="overflow-y: auto;">
+
+
+  {% if requests %}
+  <div class="list-group" style="overflow-y: auto;">
+
+
+      {% for request in requests %}
+      <div class="list-group-item d-flex justify-content-between alight-items-center" style="overflow-y: auto;">
+
+          <div class="d-flex align-items-center">
+              <div class="d-flex flex-column">
+
+
+                {% if request.incoming %}
+                  <strong>You requested</strong>
+                {% else %}
+                  <strong>{{ request.sender.email }} requested</strong>
+                {% endif %}
+
+                <strong>Date: {{ request.date|date:"Y-m-d H:i" }}</strong><br>
+
+
+                <strong>Status:  {{ request.status }}</strong>
+              </div>
+
+
+              {% if request.status == "Pending" and request.sender == user %}
+              <form action="{% url 'approve' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="request_id" value="{{ request.id }}">
+
+                <button class="btn btn-primary ms-5" style="cursor: pointer;" onclick="this.onsest('form').submit();">
+                  ACCEPT
+                </button>
+              {% endif %}
+
+          </div>
+
+
+          <div class="d-flex align-items-center">
+
+            {% if request.status == "Approved" %}
+              {% if request.incoming %}
+                <strong style="color: green;">+ {{ request.receiver_amount }}</strong>
+              {% else %}
+                <strong style="color: red;">- {{ request.sender_amount }}</strong>
+              {% endif %}
+              
+            {% else %}
+
+              {% if request.incoming %}
+                <strong >+ {{ request.receiver_amount }}</strong>
+              {% else %}
+                <strong >- {{ request.sender_amount }}</strong>
+              {% endif %}
+
+
+            {% endif %}
+
+          </div>
+
+
+
+
+
+
+      </div>
+      {% endfor %}
+
+
+
+
+
+  </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      No requests found.
+    </div>
+  {% endif %}
+
+
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+</div>
+{% endblock %}

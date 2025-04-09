@@ -9,6 +9,8 @@ from django.shortcuts import render, redirect
 
 from django.contrib import messages
 
+from utils.currency import CurrencyAmount
+
 
 from .forms import LoginForm
 from .models import Account
@@ -16,7 +18,7 @@ from .models import Account
 @login_required
 def home(request):
     user = request.user
-    passon = {"balance": user.balance, "currency": user.currency }
+    passon = {"balance": CurrencyAmount(user.balance).to_api_str(), "currency": user.currency }
     return render(request, "accounts/home.html",  passon)
 
 @login_required

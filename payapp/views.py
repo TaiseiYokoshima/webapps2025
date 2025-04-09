@@ -2,9 +2,9 @@ from decimal import Decimal
 from enum import Enum
 
 from django.contrib.auth.decorators import login_required
-from django.http.response import HttpResponseForbidden
+from django.http.response import HttpResponseForbidden, HttpResponseServerError
 from services.currency import CurrencyAmount, call_conversion_api
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 
 from django.contrib.auth.decorators import login_required
@@ -38,65 +38,118 @@ class TransferResult(Enum):
     TransactionFailure = "Server error due to transaction failure"
 
 
-@transaction.atomic()
-def make_transfer(request, sender: Account, receiver: Account, amount_str: CurrencyAmount, Model: Union[Type[Payment], Type[Request]]) -> TransferResult:
-    amount = None
+def non_atomic_make_payment(request, sender: Account, receiver: Account, amount_input: CurrencyAmount) -> TransferResult:
     rate = CurrencyAmount(1)
 
-    try:
-        amount = CurrencyAmount(amount_str)
-    except Exception:
-        return TransferResult.InvalidStringValueForAmount
+    source: str = sender.currency
+    target: str = receiver.currency
 
-    source: str = getattr(sender, "currency")
-    target: str = getattr(receiver, "currency")
-    sender_balance = CurrencyAmount(getattr(sender, "balance"))
-    receiver_balance = CurrencyAmount(getattr(receiver, "balance"))
 
-    sender_subtract = amount
-    receiver_add = amount
+    amount = amount_input.into()
 
-    if (Model is Payment and sender.balance < amount.into()):
+    if amount > sender.balance:
         return TransferResult.InsufficientFunds
 
-
     if (source != target):
+        amount_str = CurrencyAmount(amount).to_api_str()
+
         try:
-            result_json = call_conversion_api(request, source, target, str(amount_str.into()))
-            receiver_add = CurrencyAmount(result_json["amount"])
-            rate = CurrencyAmount(Decimal(result_json["amount"]))
-        except Exception:
+            result_json = call_conversion_api(request, source, target, amount_str)
+            rate = CurrencyAmount(result_json["rate"])
+        except Exception as e:
+            print(e)
             return TransferResult.CurrencyExchangFaillure
 
-    sender_result = sender_balance - sender_subtract
-    receiver_result = receiver_balance + receiver_add
+
+    amount = CurrencyAmount(amount)
+    
+    sender_amount = amount
+    receiver_amount = CurrencyAmount((amount * rate).into())
 
 
-    sender.balance = sender_result.into()
-    receiver.balance = receiver_result.into()
+    sender_balance = (CurrencyAmount(sender.balance) - sender_amount).into()
+    receiver_balance = (CurrencyAmount(receiver.balance) + receiver_amount).into()
 
-    transfer = Model(sender=sender, receiver=receiver, rate=rate, amount=amount.into())
 
-    if Model is Payment:
-        sender.save()
-        receiver.save()
 
-    transfer.save()
+    sender.balance = sender_balance
+    receiver.balance = receiver_balance
+
+
+    sender.save()
+    receiver.save()
+
+
+
+    sender_amount = sender_amount.into()
+    receiver_amount = receiver_amount.into()
+
+
+    payment: Payment = Payment(
+            sender=sender, receiver=receiver, 
+            sender_amount=sender_amount, receiver_amount=receiver_amount, rate=rate.into()) 
+
+
+    payment.save()
+
 
     return TransferResult.Ok
 
-def make_payment(request, sender: Account, receiver: Account, amount_str: CurrencyAmount):
-    return make_transfer(request, sender, receiver, amount_str, Payment)
+
+def non_atomic_make_request(request, sender: Account, receiver: Account, amount_input: CurrencyAmount) -> TransferResult:
+    rate = CurrencyAmount(1)
+
+    source: str = receiver.currency
+    target: str = sender.currency
+
+    amount = amount_input.into()
+
+    if (source != target):
+        amount_str = CurrencyAmount(amount).to_api_str()
+
+        try:
+            result_json = call_conversion_api(request, source, target, amount_str)
+            rate = CurrencyAmount(result_json["rate"])
+        except Exception as e:
+            print(e)
+            return TransferResult.CurrencyExchangFaillure
 
 
-def make_request(request, sender: Account, receiver: Account, amount_str: CurrencyAmount):
-    return make_transfer(request, sender, receiver, amount_str, Request)
+    amount = CurrencyAmount(amount)
+    
+    receiver_amount = amount.into()
+    sender_amount = (amount * rate).into()
+
+    payment_request: Request = Request(
+            sender=sender, receiver=receiver, 
+            sender_amount=sender_amount, receiver_amount=receiver_amount, rate=rate.into()) 
+
+    payment_request.save()
+
+    return TransferResult.Ok
 
 
+def make_payment(request, sender: Account, receiver: Account, amount_input: CurrencyAmount) -> TransferResult:
+    try:
+        with transaction.atomic():
+            return non_atomic_make_payment(request, sender, receiver, amount_input)
+    except Exception as e:
+        print(e)
+        return TransferResult.TransactionFailure
+
+
+def make_request(request, sender: Account, receiver: Account, amount_input: CurrencyAmount) -> TransferResult:
+    try:
+        with transaction.atomic():
+            return non_atomic_make_request(request, sender, receiver, amount_input)
+    except Exception as e:
+        print(e)
+        return TransferResult.TransactionFailure
 
 
 @login_required
-def make_tranfer(request, transfer_type):
+def view_make_payment(request):
+    transfer_type = "payment"
     if request.method == "GET":
         return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type})
 
@@ -112,14 +165,10 @@ def make_tranfer(request, transfer_type):
         return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type, "form": form})
     
 
-
-    form_func = form.get_payment_data if transfer_type == "payment" else form.get_request_data
-    transfer_func = make_payment if transfer_type == "payment" else make_request
+    sender, receiver, amount = form.get_payment_data()
 
 
-    sender, receiver, amount = form_func()
-
-    result = transfer_func(request, sender, receiver, amount)
+    result = make_payment(request, sender, receiver, amount)
 
 
     if result != TransferResult.Ok:
@@ -131,26 +180,164 @@ def make_tranfer(request, transfer_type):
 
 
 @login_required
+def view_make_request(request):
+    transfer_type = "request"
+    if request.method == "GET":
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type})
+
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    form = TransferForm(request.POST, user=request.user)
+    form_invalid = not form.is_valid()
+    if form_invalid:
+        exception = (list(form.errors.as_data().values())[0][0]).messages[0]
+        messages.error(request, exception)
+
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type, "form": form})
+    
+
+    sender, receiver, amount = form.get_request_data()
+
+    result = make_request(request, sender, receiver, amount)
+
+
+    if result != TransferResult.Ok:
+        messages.error(request, result.value)
+        return render(request, "payapp/make_transfer.html", {"transfer_type": transfer_type, "form": form})
+
+
+    return redirect("home")
+
+
+
+@login_required
 def view_payments(request):
     account = request.user
 
-
     payments = Payment.objects.filter( Q(sender=account) | Q(receiver=account) ).order_by("-date")
-
-
 
     for payment in payments:
         payment.incoming = payment.receiver == account
-
-
-
+        payment.sender_amount = CurrencyAmount(payment.sender_amount).to_api_str()
+        payment.receiver_amount = CurrencyAmount(payment.receiver_amount).to_api_str()
 
     return render(request, "payapp/payments.html", {'payments': payments} )
 
 @login_required
 def view_requests(request):
-    return render(request, "payapp/requests.html")
+    http_request = request
+    account = request.user
 
+
+    requests = Request.objects.filter( Q(sender=account) | Q(receiver=account) ).order_by("-date")
+
+
+    for request in requests:
+        request.incoming = request.receiver == account
+
+        status = request.status
+
+        if status == "P":
+            status = "Pending"
+        elif status == "A":
+            status = "Approved"
+        elif status == "D":
+            status = "Denied"
+        else:
+           return HttpResponseServerError() 
+
+        request.status = status
+        request.sender_amount = CurrencyAmount(request.sender_amount).to_api_str()
+        request.receiver_amount = CurrencyAmount(request.receiver_amount).to_api_str()
+
+
+
+    return render(http_request, "payapp/requests.html", { "requests": requests, "user": account })
+
+
+
+
+def non_atomic_apply_request(request: Request) -> TransferResult:
+    sender = request.sender
+    receiver = request.receiver
+
+
+    sender_amount = CurrencyAmount(request.sender_amount)
+    receiver_amount = CurrencyAmount(request.receiver_amount)
+    rate = request.rate
+
+    
+    sender_balance = (CurrencyAmount(sender.balance) - sender_amount).into()
+    receiver_balance = (CurrencyAmount(receiver.balance) + receiver_amount).into()
+
+
+    sender.balance = sender_balance
+    receiver.balance = receiver_balance
+
+    sender.save()
+    receiver.save()
+
+
+    payment: Payment = Payment(
+            sender=sender, receiver=receiver, 
+            sender_amount=sender_amount, receiver_amount=receiver_amount, rate=rate) 
+
+    payment.save()
+
+    request.status = "A"
+    request.save()
+
+    return TransferResult.Ok
+
+
+def apply_request(request: Request) -> TransferResult:
+    if request.sender_amount > request.sender.balance:
+        return TransferResult.InsufficientFunds
+
+    try:
+        with transaction.atomic():
+            return non_atomic_apply_request(request)
+
+    except Exception as e:
+        print(e)
+        return TransferResult.TransactionFailure
+
+
+
+
+
+@login_required
+def approve_request(request):
+    if request.method != "POST":
+        return HttpResponseForbidden()
+
+    request_id = request.POST.get("request_id")
+
+    approved_request: Request | None = Request.objects.filter(id=request_id).first()
+
+
+    if approved_request is None:
+        messages.error(request, "Accepted request does not exist")
+        return redirect("requests")
+
+    user = request.user
+
+
+    result: TransferResult = apply_request(approved_request)
+
+
+    if result == TransferResult.InsufficientFunds:
+        messages.error(request, "Failed due to insufficient funds.")
+        return redirect("requests")
+
+
+    if result == TransferResult.TransactionFailure:
+        messages.error(request, "Failed due to server error. Try again later.")
+        return redirect("requests")
+
+
+    return redirect("requests")
 
 
 

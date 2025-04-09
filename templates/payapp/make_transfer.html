@@ -21,7 +21,7 @@
           {% endif %}
 
 
-          <label for="email" >Receiver's Email</label>
+          <label for="email" >{% if transfer_type == "payment" %}Receiver{% else %}Sender{% endif %}'s Email</label>
           <input type="email" name="email" id="id_email" class="form-control" required value="{{ form.email.value|default:'' }}">
 
           <label for="amount" >Amount</label>
