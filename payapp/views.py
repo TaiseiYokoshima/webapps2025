@@ -321,6 +321,11 @@ def approve_request(request):
         messages.error(request, "Accepted request does not exist")
         return redirect("requests")
 
+    if approved_request.status != "P":
+        messages.error(request, "Request can be accepted if pending")
+        return redirect("requests")
+
+
     user = request.user
 
 
