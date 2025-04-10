@@ -24,13 +24,13 @@ from django.http.response import HttpResponse
 from accounts.views import home
 
 urlpatterns = [
-    path("admin/", include("admin.urls")),
+    path("webapps2025/admin/", include("admin.urls")),
 
-    path("", include("accounts.urls")),
+    path("webapps2025/", include("accounts.urls")),
 
-    path("register/", include("register.urls")),
-    path('conversion/', include('conversion.urls')),
-    path('', include('payapp.urls')),
+    path("webapps2025/register/", include("register.urls")),
+    path('webapps2025/conversion/', include('conversion.urls')),
+    path('webapps2025/', include('payapp.urls')),
 
 
 ]

@@ -3,10 +3,10 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="min-height: {{ nav_height }}; max-height: {{ nav_height }};">
   <div class="container-fluid">
 
-    <a class="navbar-brand" href="/">PayApp</a>
+    <a class="navbar-brand" href="/webapps2025/">PayApp</a>
     <div>{{ user.email }}</div>
 
-    <div class="ms-4"><a class="nav-link" href="/notifications">Notifications {{ unread_notifications }}</a></div>
+    <div class="ms-4"><a class="nav-link" href="/webapps2025/notifications">Notifications {{ unread_notifications }}</a></div>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,13 +15,11 @@
 
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav ms-auto">
-        <a class="nav-link active" aria-current="page" href="/admin">Admin</a>
-        <a class="nav-link active" aria-current="page" href="">Home</a>
-        <a class="nav-link" href="/payments">Payments</a>
-        <a class="nav-link" href="/requests">Requests</a>
-
-
-        <a class="nav-link" href="/logout/">Sign Out</a>
+        <a class="nav-link active" aria-current="page" href="/webapps2025/admin">Admin</a>
+        <a class="nav-link active" aria-current="page" href="/webapps2025/">Home</a>
+        <a class="nav-link" href="/webapps2025/payments">Payments</a>
+        <a class="nav-link" href="/webapps2025/requests">Requests</a>
+        <a class="nav-link" href="/webapps2025/logout">Sign Out</a>
       </div>
     </div>
 

@@ -165,5 +165,5 @@ AUTH_USER_MODEL = "accounts.Account"
 SITE_ID = 1
 
 
-LOGIN_URL = '/login'
+LOGIN_URL = '/webapps2025/login'
 
