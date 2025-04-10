@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5eeeb89a-a8bb-470e-b47f-8cf82a40d23e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/run_https" beforeDir="false" afterPath="$PROJECT_DIR$/run_https" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +34,7 @@
     "Shell Script.run.executor": "Run",
     "Shell Script.run_http.executor": "Run",
     "Shell Script.run_https.executor": "Run",
+    "Shell Script.setup_virtual_env.executor": "Run",
     "git-widget-placeholder": "main",
     "last_opened_file_path": "/home/rom/webapps2025/.venv/bin/activate",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
@@ -69,7 +70,7 @@
       <method v="2" />
     </configuration>
     <configuration name="install_requirements" type="ShConfigurationType">
-      <option name="SCRIPT_TEXT" value="" />
+      <option name="SCRIPT_TEXT" value="pip install -r requirements.txt" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
       <option name="SCRIPT_PATH" value="$PROJECT_DIR$/install_requirements" />
       <option name="SCRIPT_OPTIONS" value="" />
@@ -79,7 +80,7 @@
       <option name="INTERPRETER_PATH" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="EXECUTE_IN_TERMINAL" value="true" />
-      <option name="EXECUTE_SCRIPT_FILE" value="true" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
       <envs />
       <method v="2" />
     </configuration>
@@ -128,6 +129,21 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="setup_virtual_env" type="ShConfigurationType">
+      <option name="SCRIPT_TEXT" value="python3.13 -m venv .venv" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/fish" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="true" />
+      <option name="EXECUTE_SCRIPT_FILE" value="false" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="Tox" factoryName="Tox">
       <module name="webapps2025" />
       <option name="ENV_FILES" value="" />
@@ -150,6 +166,7 @@
     <list>
       <item itemvalue="Shell Script.run" />
       <item itemvalue="Shell Script.install_requirements" />
+      <item itemvalue="Shell Script.setup_virtual_env" />
       <item itemvalue="Shell Script.run_https" />
     </list>
   </component>
