@@ -2,5 +2,6 @@
 
 
 python3 manage.py migrate > /dev/null
+./setup_certs
 python3 manage.py runserver_plus --cert-file ./certs/django.crt --key-file ./certs/django.key
 
