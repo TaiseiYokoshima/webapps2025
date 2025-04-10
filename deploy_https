@@ -2,5 +2,5 @@
 
 
 python3 manage.py migrate > /dev/null
-python3 manage.py runserver_plus --cert-file ./certs/django.crt --key-file ./certs/django.key 0.0.0.0:8080
+nohup python3 manage.py runserver_plus --cert-file ./certs/django.crt --key-file ./certs/django.key 0.0.0.0:8080 &
 
