@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 USE_POSTGRES = False
-USE_POSTGRES = True
+# USE_POSTGRES = True
 
 
 # Quick-start development settings - unsuitable for production
