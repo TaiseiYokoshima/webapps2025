@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm -rf certs
+mkdir -p certs
+openssl genpkey -algorithm RSA -out ./certs/django.key -aes256
+openssl req -new -x509 -key ./certs/django.key -out ./certs/django.crt -days 365 -subj "/C=UK/ST=East Sussex/L=Brighton/O=/OU-/CN=Taisei Yokoshima"
